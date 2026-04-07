@@ -1,0 +1,246 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-mono, monospace); }
+  .wrap { padding: 1rem 0; display: flex; flex-direction: column; gap: 16px; }
+  .board-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+
+  .card-title { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; font-family: var(--font-sans); }
+
+  .arduino { background: #1a6b3c; border-radius: 8px; padding: 12px 14px; min-width: 160px; }
+  .arduino .chip-label { font-size: 11px; color: #a8f0c8; margin-bottom: 6px; font-family: var(--font-sans); }
+  .arduino .chip { background: #145e31; border: 1px solid #2a9e60; border-radius: 4px; padding: 6px 10px; }
+  .arduino .pin-row { display: flex; justify-content: space-between; font-size: 10px; color: #7de0aa; margin: 2px 0; }
+
+  .mcp { background: #2b2b3b; border-radius: 8px; padding: 12px 14px; min-width: 180px; }
+  .mcp .chip-label { font-size: 11px; color: #b0aaff; margin-bottom: 6px; font-family: var(--font-sans); }
+  .mcp .chip { background: #1e1e2e; border: 1px solid #5555aa; border-radius: 4px; padding: 6px 10px; }
+  .mcp .pin-row { display: flex; justify-content: space-between; font-size: 10px; color: #9090cc; margin: 2px 0; }
+  .mcp .pin-row .active { color: #ff9955; }
+
+  .btn-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .push-btn {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #cc3333;
+    border: 4px solid #991111;
+    cursor: pointer;
+    user-select: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #ffcccc; font-family: var(--font-sans);
+    transition: background 0.08s, transform 0.08s;
+    box-shadow: 0 4px 0 #771111;
+    position: relative; top: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .push-btn:active, .push-btn.pressed {
+    background: #ff5555;
+    box-shadow: 0 1px 0 #771111;
+    top: 3px;
+    transform: scale(0.97);
+  }
+  .btn-label { font-size: 12px; color: var(--color-text-secondary); font-family: var(--font-sans); }
+
+  .monitor { background: #0d0d0d; border-radius: var(--border-radius-lg); border: 0.5px solid #333; padding: 0; overflow: hidden; flex: 1; min-width: 200px; }
+  .monitor-header { background: #1a1a1a; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid #333; }
+  .monitor-title { font-size: 12px; color: #888; font-family: var(--font-sans); }
+  .monitor-baud { font-size: 11px; color: #555; font-family: var(--font-sans); }
+  .monitor-body { padding: 10px 12px; height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
+  .log-line { font-size: 13px; color: #00ff88; line-height: 1.6; }
+  .log-line .ts { color: #444; margin-right: 8px; font-size: 11px; }
+  .log-line.val-1 .val { color: #00ff88; font-weight: 500; }
+  .log-line.val-0 .val { color: #ff6644; }
+
+  .state-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .state-card { flex: 1; min-width: 100px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; }
+  .state-label { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-sans); margin-bottom: 4px; }
+  .state-value { font-size: 22px; font-weight: 500; font-family: var(--font-mono); }
+  .state-value.high { color: #00cc66; }
+  .state-value.low { color: #cc4422; }
+
+  .wire { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-sans); }
+  .wire-line { height: 2px; width: 28px; border-radius: 1px; }
+  .w-sda { background: #ffaa00; }
+  .w-scl { background: #00aaff; }
+  .w-vcc { background: #ff4444; }
+  .w-gnd { background: #444; }
+
+  .code-box { background: #111; border-radius: var(--border-radius-md); border: 0.5px solid #333; padding: 10px 14px; }
+  .code-box pre { font-size: 12px; color: #ccc; line-height: 1.6; overflow-x: auto; font-family: var(--font-mono); }
+  .kw { color: #cc99ff; }
+  .cm { color: #666; }
+  .str { color: #aadd77; }
+  .num { color: #ffaa55; }
+  .fn { color: #66ccff; }
+  .clr-btn { background: none; border: 0.5px solid #444; color: #888; font-size: 11px; border-radius: 4px; padding: 3px 8px; cursor: pointer; font-family: var(--font-sans); }
+  .clr-btn:hover { border-color: #888; color: #ccc; }
+</style>
+
+<div class="wrap">
+
+  <div class="board-row">
+    <div class="card" style="flex: 1; min-width: 140px;">
+      <div class="card-title">Arduino Uno</div>
+      <div class="arduino">
+        <div class="chip-label">ATmega328P</div>
+        <div class="chip">
+          <div class="pin-row"><span>5V</span><span style="color:#ff6666">●</span></div>
+          <div class="pin-row"><span>GND</span><span style="color:#888">●</span></div>
+          <div class="pin-row"><span>A4 (SDA)</span><span style="color:#ffaa00">●</span></div>
+          <div class="pin-row"><span>A5 (SCL)</span><span style="color:#00aaff">●</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 4px;">
+      <div class="wire"><div class="wire-line w-vcc"></div><span>VCC</span></div>
+      <div class="wire"><div class="wire-line w-gnd"></div><span>GND</span></div>
+      <div class="wire"><div class="wire-line w-sda"></div><span>SDA</span></div>
+      <div class="wire"><div class="wire-line w-scl"></div><span>SCL</span></div>
+    </div>
+
+    <div class="card" style="flex: 1; min-width: 160px;">
+      <div class="card-title">MCP23017</div>
+      <div class="mcp">
+        <div class="chip-label">I²C GPIO Expander</div>
+        <div class="chip" id="mcp-chip">
+          <div class="pin-row"><span>VDD</span><span style="color:#ff6666">●</span></div>
+          <div class="pin-row"><span>VSS</span><span style="color:#888">●</span></div>
+          <div class="pin-row"><span>SDA</span><span style="color:#ffaa00">●</span></div>
+          <div class="pin-row"><span>SCL</span><span style="color:#00aaff">●</span></div>
+          <div class="pin-row"><span>GPA0</span><span id="gpa0-dot" style="color:#555">●</span></div>
+          <div class="pin-row"><span style="font-size:9px; color:#666">INPUT_PULLUP</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;">
+      <div class="wire"><div class="wire-line" style="background:#888; width: 16px;"></div></div>
+      <div style="font-size: 10px; color: var(--color-text-secondary); font-family: var(--font-sans);">GPA0</div>
+    </div>
+
+    <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+      <div class="card-title" style="text-align:center">Bouton</div>
+      <div class="btn-zone">
+        <button class="push-btn" id="btn" onmousedown="pressBtn()" onmouseup="releaseBtn()" onmouseleave="releaseBtn()" ontouchstart="pressBtn()" ontouchend="releaseBtn()">PRESS</button>
+        <span class="btn-label" id="btn-label">relâché</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="state-row">
+    <div class="state-card">
+      <div class="state-label">GPA0 (MCP23017)</div>
+      <div class="state-value high" id="pin-state">HIGH</div>
+    </div>
+    <div class="state-card">
+      <div class="state-label">Valeur série</div>
+      <div class="state-value" id="serial-val" style="color: var(--color-text-secondary);">—</div>
+    </div>
+    <div class="state-card">
+      <div class="state-label">Presses totales</div>
+      <div class="state-value" id="press-count" style="color: var(--color-text-primary);">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Moniteur série — 9600 baud</span>
+      <button class="clr-btn" onclick="clearMonitor()">effacer</button>
+    </div>
+    <div class="monitor">
+      <div class="monitor-header">
+        <span class="monitor-title">Serial Monitor</span>
+        <span class="monitor-baud">9600 baud</span>
+      </div>
+      <div class="monitor-body" id="monitor">
+        <div class="log-line" style="color:#555">// En attente d'interaction...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Code Arduino (sketch)</div>
+    <div class="code-box">
+<pre><span class="cm">// MCP23017 + Arduino — bouton → Serial</span>
+<span class="kw">#include</span> <span class="str">&lt;Wire.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;Adafruit_MCP23X17.h&gt;</span>
+
+<span class="kw">Adafruit_MCP23X17</span> mcp;
+<span class="kw">const</span> <span class="num">uint8_t</span> BTN_PIN = <span class="num">0</span>;  <span class="cm">// GPA0</span>
+<span class="kw">bool</span> lastState = <span class="num">HIGH</span>;
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  Serial.<span class="fn">begin</span>(<span class="num">9600</span>);
+  mcp.<span class="fn">begin_I2C</span>();
+  mcp.<span class="fn">pinMode</span>(BTN_PIN, <span class="num">INPUT_PULLUP</span>);
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="kw">bool</span> state = mcp.<span class="fn">digitalRead</span>(BTN_PIN);
+  <span class="kw">if</span> (state != lastState) {
+    Serial.<span class="fn">println</span>(state == <span class="num">LOW</span> ? <span class="num">1</span> : <span class="num">0</span>);
+    lastState = state;
+  }
+  <span class="fn">delay</span>(<span class="num">10</span>);
+}</pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let pressCount = 0;
+  let isPressed = false;
+  let startMs = Date.now();
+
+  function ts() {
+    let s = ((Date.now() - startMs) / 1000).toFixed(1);
+    return s + 's';
+  }
+
+  function addLog(val) {
+    let monitor = document.getElementById('monitor');
+    let line = document.createElement('div');
+    line.className = 'log-line val-' + val;
+    line.innerHTML = '<span class="ts">[' + ts() + ']</span><span class="val">' + val + '</span>';
+    monitor.appendChild(line);
+    monitor.scrollTop = monitor.scrollHeight;
+    document.getElementById('serial-val').textContent = val;
+    document.getElementById('serial-val').className = 'state-value ' + (val === 1 ? 'high' : 'low');
+  }
+
+  function pressBtn() {
+    if (isPressed) return;
+    isPressed = true;
+    pressCount++;
+    document.getElementById('btn').classList.add('pressed');
+    document.getElementById('btn-label').textContent = 'appuyé';
+    document.getElementById('pin-state').textContent = 'LOW';
+    document.getElementById('pin-state').className = 'state-value low';
+    document.getElementById('gpa0-dot').style.color = '#ff9955';
+    document.getElementById('press-count').textContent = pressCount;
+    addLog(1);
+  }
+
+  function releaseBtn() {
+    if (!isPressed) return;
+    isPressed = false;
+    document.getElementById('btn').classList.remove('pressed');
+    document.getElementById('btn-label').textContent = 'relâché';
+    document.getElementById('pin-state').textContent = 'HIGH';
+    document.getElementById('pin-state').className = 'state-value high';
+    document.getElementById('gpa0-dot').style.color = '#555';
+    addLog(0);
+  }
+
+  function clearMonitor() {
+    let monitor = document.getElementById('monitor');
+    monitor.innerHTML = '<div class="log-line" style="color:#555">// Moniteur effacé</div>';
+    startMs = Date.now();
+    document.getElementById('serial-val').textContent = '—';
+    document.getElementById('serial-val').style.color = 'var(--color-text-secondary)';
+    document.getElementById('serial-val').className = 'state-value';
+  }
+</script>
